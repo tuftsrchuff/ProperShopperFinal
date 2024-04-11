@@ -1,0 +1,173 @@
+# This is the file that have all the important hyperparameters of the task
+# including object pose, there relavite relation and other things
+
+# TODO: there seems to have a bug with the RL stuff
+# the agent would fail if you change this
+# so it would be best if you leave granularity to 0.45
+granularity: 0.45
+navigation_steps_limit: 2000
+navigation_accuracy: 0.5
+navigation_trails_limit: 5
+
+# all the critical objects
+TARGET_CART_POSITION:
+    "milk": 
+        - 6
+        - 3.5
+    "apples":
+        - 6
+        - 7.5
+    "sausage":
+        - 6
+        - 11.5
+    "brie cheese":
+        - 6
+        - 15.5
+    "garlic":
+        - 6
+        - 19.5
+    "avocado":
+        - 6
+        - 23.5
+    "prepared foods":
+        - 16.5
+        - 5
+    "fresh fish":
+        - 16.5  
+        - 11
+    "registers":
+        - 4.5
+        - 11.5
+    "cartReturns":
+        - 1.5
+        - 17.5
+    "basketReturns":
+        - 3.5
+        - 17.5
+    "exit":
+        - 1
+        - 7.3
+
+# items that are reachable through hard-coded movements
+SIMPLE_MOVE_OBJECTS:
+    "chocolate milk": 
+        - 10
+        - 3.5
+    "strawberry milk": 
+        - 14
+        - 3.5
+    "oranges": 
+        - 8
+        - 7.5
+    "banana": 
+        - 10
+        - 7.5
+    "strawberry": 
+        - 12
+        - 7.5
+    "raspberry": 
+        - 14
+        - 7.5
+    "steak": 
+        - 8
+        - 11.5
+    "chicken": 
+        - 12
+        - 11.5
+    "ham": 
+        - 14
+        - 11.5
+    "swiss cheese": 
+        - 8
+        - 15.5
+    "cheese wheel": 
+        - 10
+        - 15.5
+    "leek": 
+        - 8
+        - 19.5
+    "red bell pepper": 
+        - 10
+        - 19.5
+    "carrot": 
+        - 12
+        - 19.5
+    "lettuce": 
+        - 14
+        - 19.5
+    "broccoli": 
+        - 8
+        - 23.5
+    "cucumber": 
+        - 10
+        - 23.5
+    "yellow bell pepper": 
+        - 12
+        - 23.5
+    "onion": 
+        - 14
+        - 23.5
+    
+# first get to critical items, then move to simple-move items
+TARGET_SIMPLE_CART_RELATIVE_RELATION :
+    "milk":
+        - "chocolate milk"
+        - "strawberry milk"
+    "apples":
+        - "oranges"
+        - "banana"
+        - "strawberry"
+        - "raspberry"
+    "sausage":
+        - "steak"
+        - "chicken"
+        - "ham"
+    "brie cheese":
+        - "swiss cheese"
+        - "cheese wheel"
+    "garlic":
+        - "leek"
+        - "red bell pepper"
+        - "carrot"
+        - "lettuce"
+    "avocado":
+        - "broccoli"
+        - "cucumber"
+        - "yellow bell pepper"
+        - "onion"
+
+SIMPLE_MOVE_DIRECTION: "EAST"
+
+RETURNS_Y_AXIS:
+    "carts": 18
+    "baskets": 18
+    
+# not used we default a southern direction
+# since most objects are facing south
+DESIERED_DIRECTION:
+    "milk_shelf": "SOUTH"
+    "chocolate_milk_shelf": "SOUTH"
+    "strawberry milk": "SOUTH"
+
+# objects that are NOT facing south
+# require a change in navigation behavior
+WITH_SPECIAL_DIRECTION:
+    "prepared foods": 
+        - "WEST"
+        - 17.5
+        - 5
+    "fresh fish": 
+        - "WEST"
+        - 17.5
+        - 11
+    "registers": 
+        - "EAST"
+        - 3.25
+        - 10
+
+extra_dist_with_cart:
+    "registers": 0.25
+
+    
+
+
