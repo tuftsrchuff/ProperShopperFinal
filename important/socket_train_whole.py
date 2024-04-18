@@ -15,7 +15,7 @@ from constants import *
 import pickle
 import pandas as pd
 import argparse
-from termcolor import colored
+# from termcolor import colored
 
 def euclidean_distance(pos1, pos2):
     # Calculate Euclidean distance between two points
@@ -37,7 +37,7 @@ def calculate_reward(previous_state, current_state, target, task):
 
     if task == 'get':
         if len(current_state['violations']) != 0:
-            print(f'violated norm: {current_state['violations']}')
+            # print(f'violated norm: {current_state['violations']}')
             return norm_penalty
         prev_player = previous_state['observation']['players'][0]
         curr_player = current_state['observation']['players'][0]
@@ -68,7 +68,7 @@ def calculate_reward(previous_state, current_state, target, task):
     
     if task == 'pay':
         if len(current_state['violations']) != 0:
-            print(f'violated norm: {current_state['violations']}')
+            # print(f'violated norm: {current_state['violations']}')
             return norm_penalty 
         if len(current_state['observation']['baskets'][0]['purchased_contents']) != 0: 
             return 100 # Basket agent check out is guaranteed to be successful
@@ -106,13 +106,13 @@ if __name__ == "__main__":
         planner.parse_shopping_list(state)
         agent = planner.get_agent()
 
-        print(f'Current Plan: {planner.plan}')
+        # print(f'Current Plan: {planner.plan}')
         init_inventory()
         while not planner.plan_finished(): 
             done = False
             cnt = 0
             current_task = planner.get_task() 
-            print(f'Current Task: {current_task}')
+            # print(f'Current Task: {current_task}')
             while not done:
                 cnt += 1
                 action_index, finish = agent.choose_action(state)
@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 # Define the reward based on the state and next_state
                 reward = calculate_reward(state, next_state, target=current_task.split()[1], task=current_task.split()[0])  # You need to define this function 
                 if reward == 100 or finish:
-                    print("Success!") 
+                    # print("Success!") 
                     done = True 
                     # print(state['observation']['players'][0])
                     # print(state['observation']['baskets']) 
@@ -173,6 +173,7 @@ if __name__ == "__main__":
                 planner.update() 
                 agent = planner.get_agent() 
                 if agent is None:
-                    print(colored('Whole task succeeded', 'green'))
+                    print("Whole task succeeded")
+                    # print(colored('Whole task succeeded', 'green'))
     sock_game.close()
 

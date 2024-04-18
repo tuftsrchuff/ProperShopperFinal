@@ -52,7 +52,7 @@ cart_pos_left = [1, 17.5] # The position of the cart in the environment from [1,
 cart_pos_right = [2, 18.5] 
 
 class Planner:
-    def __init__(self, shoppingList, listQuant, locations, socket):
+    def __init__(self, shoppingList, listQuant, locations, socket, playerNum):
         self.shoppingList = shoppingList
         self.listQuant = listQuant
         self.locations = locations
@@ -66,12 +66,13 @@ class Planner:
         self.replay_buffer = []
         self.cart_replay_buffer = []
         self.shelves = {}
-        self.populateShelves()
         self.hasCart = True
+        self.playerNum = playerNum
+        self.populateShelves()
 
     #Populate shelf locations from environment for navigation to them
     def populateShelves(self):
-        self.socket.send(str.encode("0 NOP"))  # send action to env
+        self.socket.send(str.encode(self.playerNum + " NOP"))  # send action to env
 
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
@@ -134,27 +135,27 @@ class Planner:
             moveY = 6
         state = {}
         for _ in range(18):
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         
-        self.socket.send(str.encode("0 TOGGLE_CART"))
+        self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
         
 
         for _ in range(moveX):
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
             self.cart_replay_buffer.append("EAST")
         
         for _ in range(moveY):
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
             self.cart_replay_buffer.append("NORTH")
         
         for _ in range(3):
-            self.socket.send(str.encode("0 INTERACT"))
+            self.socket.send(str.encode(self.playerNum + " INTERACT"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
 
@@ -165,15 +166,15 @@ class Planner:
 
         #Return to cart after payment
         if self.hasCart:
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         else:
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         
-        self.socket.send(str.encode("0 TOGGLE_CART"))
+        self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
         state = recv_socket_data(self.socket)
         state = json.loads(state)
 
@@ -181,17 +182,17 @@ class Planner:
     def exitStore(self):
         #Hard coded vals to go from checkout to exit the store
         for _ in range(17):
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         
         for _ in range(40):
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         
         for _ in range(30):
-            self.socket.send(str.encode("0 WEST"))
+            self.socket.send(str.encode(self.playerNum + " WEST"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
 
@@ -199,14 +200,14 @@ class Planner:
     def goHome(self):
         #Use replay buffer to go home using the previous actions
         self.replayActions(self.replay_buffer)
-        self.socket.send(str.encode("0 NOP"))
+        self.socket.send(str.encode(self.playerNum + " NOP"))
         state = recv_socket_data(self.socket)
         state = json.loads(state)
         
         direction = state['observation']['players'][0]['direction']
         
         if direction != 2:
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
 
@@ -226,7 +227,7 @@ class Planner:
         while len(buffer) > 0:
             prevAction = buffer.pop()
             currAction = mapDir[prevAction]
-            currAction = "0 " + currAction
+            currAction = self.playerNum + " " + currAction
             self.socket.send(str.encode(currAction))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
@@ -238,7 +239,7 @@ class Planner:
         #Use RL agent to go to location
         self.replay_buffer = []
         goalDest = location
-        self.socket.send(str.encode("0 NOP"))
+        self.socket.send(str.encode(self.playerNum + " NOP"))
         state = recv_socket_data(self.socket)
         state = json.loads(state)
 
@@ -249,7 +250,7 @@ class Planner:
         while not state['gameOver']:
             # Choose an action based on the current state
             action_index = self.agent.choose_action(state, goal_x = goalDest[0], goal_y = goalDest[1], train=False)
-            action = "0 " + self.action_commands[action_index]
+            action = self.playerNum + " " + self.action_commands[action_index]
             self.socket.send(str.encode(action))  # send action to env
             self.replay_buffer.append(self.action_commands[action_index])
 
@@ -278,26 +279,26 @@ class Planner:
         
         print(f"Going to {location}")
         for _ in range(moveX):
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
         
         for _ in range(moveY):
-            self.socket.send(str.encode("0 SOUTH"))
+            self.socket.send(str.encode(self.playerNum + " SOUTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
         
-        self.socket.send(str.encode("0 INTERACT"))
+        self.socket.send(str.encode(self.playerNum + " INTERACT"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
         for _ in range(moveY):
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
         
         for _ in range(moveX):
-            self.socket.send(str.encode("0 WEST"))
+            self.socket.send(str.encode(self.playerNum + " WEST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
@@ -316,18 +317,18 @@ class Planner:
         #Plan changes whether there is a basket or a cart
         if not self.hasCart:
             for _ in range(4):
-                self.socket.send(str.encode("0 EAST"))
+                self.socket.send(str.encode(self.playerNum + " EAST"))
                 state = recv_socket_data(self.socket)  # get observation from env
                 state = json.loads(state)
                 self.replay_buffer.append("EAST")
         
-        self.socket.send(str.encode("0 NOP"))
+        self.socket.send(str.encode(self.playerNum + " NOP"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
         direction = state['observation']['players'][0]['direction']
     
         if direction != 0:
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)
             state = json.loads(state)
         
@@ -337,53 +338,53 @@ class Planner:
         
     def grabCounterItem(self):
         #Actions specific for counter item pickup
-        self.socket.send(str.encode("0 NOP"))
+        self.socket.send(str.encode(self.playerNum + " NOP"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
     
         #Actions differ for cart and basket pickup from counter
         if not self.hasCart:
             if state['observation']['players'][0]['direction'] != 3:
-                self.socket.send(str.encode("0 WEST"))
+                self.socket.send(str.encode(self.playerNum + " WEST"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
             
-            self.socket.send(str.encode("0 TOGGLE_CART"))
+            self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
             #Move to location of counter where agent can grab item
             while state["observation"]["players"][0]["position"][0] < 17.25:
-                self.socket.send(str.encode("0 EAST"))
+                self.socket.send(str.encode(self.playerNum + " EAST"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
                 self.cart_replay_buffer.append("EAST")
         
         else:
             if state['observation']['players'][0]['direction'] != 0:
-                self.socket.send(str.encode("0 NORTH"))
+                self.socket.send(str.encode(self.playerNum + " NORTH"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
                
             
-            self.socket.send(str.encode("0 TOGGLE_CART"))
+            self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
             #Move to location of counter where agent can grab item
             while state["observation"]["players"][0]["position"][0] < 17.25:
-                self.socket.send(str.encode("0 EAST"))
+                self.socket.send(str.encode(self.playerNum + " EAST"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
                 self.cart_replay_buffer.append("EAST")
         
-        self.socket.send(str.encode("0 INTERACT"))
+        self.socket.send(str.encode(self.playerNum + " INTERACT"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
         #Keep attempting to grab food until success state
         while state["observation"]["players"][0]['holding_food'] is None:
-            self.socket.send(str.encode("0 INTERACT"))
+            self.socket.send(str.encode(self.playerNum + " INTERACT"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
@@ -392,14 +393,14 @@ class Planner:
 
         if not self.hasCart:
             while state['observation']['players'][0]['direction'] != 3:
-                self.socket.send(str.encode("0 WEST"))
+                self.socket.send(str.encode(self.playerNum + " WEST"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
         else:
             print("Trying to turn north")
             while state['observation']['players'][0]['direction'] != 0:
                 print("In while loop")
-                self.socket.send(str.encode("0 NORTH"))
+                self.socket.send(str.encode(self.playerNum + " NORTH"))
                 state = recv_socket_data(self.socket)
                 state = json.loads(state)
                 print("Cart and now turning NORTH")
@@ -407,7 +408,7 @@ class Planner:
 
         #Keep trying to grab food until agent gets it, in while loop because action fails sometimes
         while state["observation"]["players"][0]['holding_food'] is not None:
-            self.socket.send(str.encode("0 INTERACT"))
+            self.socket.send(str.encode(self.playerNum + " INTERACT"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             direction = state['observation']['players'][0]['direction']
@@ -415,7 +416,7 @@ class Planner:
             print(self.hasCart)
         
             
-        self.socket.send(str.encode("0 TOGGLE_CART"))
+        self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
         state = recv_socket_data(self.socket)
         state = json.loads(state)
 
@@ -423,7 +424,7 @@ class Planner:
     
     def grabItem(self, food):
         #Grabbing item from the shelf 
-        self.socket.send(str.encode("0 TOGGLE_CART"))
+        self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
@@ -433,7 +434,7 @@ class Planner:
             toY = self.shelves[food][1] + 1.4
             self.grabFromShelf(state, toX, toY)
 
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
@@ -442,21 +443,21 @@ class Planner:
             toY = self.shelves[food][1] + 1.4
             self.grabFromShelf(state, toX, toY)
 
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
         for _ in range(2):
-                self.socket.send(str.encode("0 INTERACT"))
+                self.socket.send(str.encode(self.playerNum + " INTERACT"))
                 state = recv_socket_data(self.socket)  # get observation from env
                 state = json.loads(state)
 
-        self.socket.send(str.encode("0 TOGGLE_CART"))
+        self.socket.send(str.encode(self.playerNum + " TOGGLE_CART"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
         if not self.hasCart:
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
@@ -464,24 +465,24 @@ class Planner:
         #Specific grab action that takes in amount of X and Y to move, agnostic to cart
         #or basket
         while state["observation"]["players"][0]["position"][0] < toX:
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             self.cart_replay_buffer.append("EAST")
         
         while state["observation"]["players"][0]["position"][1] > toY:
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             self.cart_replay_buffer.append("NORTH")
         
-        self.socket.send(str.encode("0 INTERACT"))
+        self.socket.send(str.encode(self.playerNum + " INTERACT"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
         #Keep attempting to grab food until success state
         while state["observation"]["players"][0]['holding_food'] is None:
-            self.socket.send(str.encode("0 INTERACT"))
+            self.socket.send(str.encode(self.playerNum + " INTERACT"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
 
@@ -491,7 +492,7 @@ class Planner:
     def recoverToHomePos(self):
         #More sturdy return to home position, accounts for minor differences
         #in path backwards
-        self.socket.send(str.encode("0 NOP"))
+        self.socket.send(str.encode(self.playerNum + " NOP"))
         state = recv_socket_data(self.socket)  # get observation from env
         state = json.loads(state)
 
@@ -500,31 +501,31 @@ class Planner:
 
         #Less than X
         while posX < 1.15:
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             posX = state["observation"]["players"][0]["position"][0]
         
         while posX > 1.25:
-            self.socket.send(str.encode("0 WEST"))
+            self.socket.send(str.encode(self.playerNum + " WEST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             posX = state["observation"]["players"][0]["position"][0]
         
         while posY < 15.55:
-            self.socket.send(str.encode("0 SOUTH"))
+            self.socket.send(str.encode(self.playerNum + " SOUTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             posY = state["observation"]["players"][0]["position"][1]
         
         while posY > 15.65:
-            self.socket.send(str.encode("0 NORTH"))
+            self.socket.send(str.encode(self.playerNum + " NORTH"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)
             posY = state["observation"]["players"][0]["position"][1]
 
         direction = state['observation']['players'][0]['direction']
         if direction != 2:
-            self.socket.send(str.encode("0 EAST"))
+            self.socket.send(str.encode(self.playerNum + " EAST"))
             state = recv_socket_data(self.socket)  # get observation from env
             state = json.loads(state)

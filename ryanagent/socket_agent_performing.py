@@ -9,9 +9,7 @@ from env import SupermarketEnv
 from utils import recv_socket_data
 
 from Q_Learning_agent_v2 import QLAgent  # Make sure to import your QLAgent class
-import pickle
 import pandas as pd
-import time
 from planner import Planner
 
 locations = {
@@ -60,20 +58,22 @@ if __name__ == "__main__":
     agent.qtable_norms = pd.read_json('qtable_norms.json')
     agent.qtable_x = pd.read_json('qtable_x.json')
     agent.qtable_y = pd.read_json('qtable_y.json')
+
+    playerNum = input("Player number")
     
     # Connect to Supermarket
     HOST = '127.0.0.1'
     PORT = 9000
     sock_game = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock_game.connect((HOST, PORT))
-    sock_game.send(str.encode("0 RESET"))  # reset the game
+    sock_game.send(str.encode(playerNum + " RESET"))  # reset the game
 
     output = recv_socket_data(sock_game)  # get observation from env
     output = json.loads(output)
     
     shoppingList = output["observation"]["players"][0]["shopping_list"]
     listQuant = output["observation"]["players"][0]["list_quant"]
-    planner = Planner(shoppingList, listQuant, locations, sock_game)
+    planner = Planner(shoppingList, listQuant, locations, sock_game, playerNum)
     planner.executePlan()
 
         
