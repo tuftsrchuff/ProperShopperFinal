@@ -98,7 +98,8 @@ class SupermarketEventHandler:
 
             elif keys[pygame.K_LEFT]:  # left
                 obs, reward, done, info, violations=self.env.step(self.single_player_action(PlayerAction.WEST))
-                print(obs['players'][0]['position'])
+                # print(obs['players'][0]['position'])
+                # print(obs)
                 # print(obs)
                 # print(obs['baskets'])
                 # print(obs['players'][0]['bagged_items'])

@@ -15,7 +15,7 @@ from constants import *
 import pickle
 import pandas as pd
 import argparse
-# from termcolor import colored
+from termcolor import colored
 
 def euclidean_distance(pos1, pos2):
     # Calculate Euclidean distance between two points
