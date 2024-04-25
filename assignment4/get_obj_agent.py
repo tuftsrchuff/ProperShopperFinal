@@ -33,7 +33,8 @@ class GetObjAgent:
         position = player_info['position'].copy()
         position[0] = int((1 + position[0]) / granularity)
         position[1] = int((1 + position[1]) / granularity)
-        return json.dumps({'position': position}, sort_keys=True)
+        return json.dumps({'position': position,
+                           'direction': player_info['direction']}, sort_keys=True)
     
     def check_add(self, state):
         if self.trans(state) not in self.qtable.index:
@@ -55,18 +56,18 @@ class GetObjAgent:
     def choose_action(self, state):
         self.check_add(state)
         ob = self.trans(state)
-        # max_v = self.qtable.loc[ob, :].max()
+        max_v = self.qtable.loc[ob, :].max()
         candidates = [i for i in range(self.action_space) if self.norm_table.loc[ob, i] != 1]
         if len(candidates) == 0: 
             candidates = range(self.action_space)
         values = [self.qtable.loc[ob, i] for i in candidates]
-        # greedy_candidates = [i for i in candidates if self.qtable.loc[ob, i] == max_v] 
-        greedy_action = candidates[np.argmax(values)]
-        # if len(greedy_candidates) == 0:
-        #     greedy_candidates = candidates
+        greedy_candidates = [i for i in candidates if self.qtable.loc[ob, i] == max_v] 
+        # greedy_action = candidates[np.argmax(values)]
+        if len(greedy_candidates) == 0:
+            greedy_candidates = candidates
         if self.epsilon > self.mini_epsilon:
             self.epsilon *= self.decay
-        action = np.random.choice(candidates) if np.random.rand() < self.epsilon else greedy_action
+        action = np.random.choice(candidates) if np.random.rand() < self.epsilon else np.random.choice(greedy_candidates)
         return action, None
 
     def save_qtables(self):

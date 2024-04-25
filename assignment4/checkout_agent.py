@@ -32,7 +32,8 @@ class CheckoutAgent:
         position = player_info['position'].copy()
         position[0] = int((1 + position[0]) / granularity)
         position[1] = int((1 + position[1]) / granularity)
-        return json.dumps({'position': position}, sort_keys=True)
+        return json.dumps({'position': position,
+                           'direction': player_info['direction']}, sort_keys=True)
     
     def check_add(self, state):
         if self.trans(state) not in self.qtable.index:
