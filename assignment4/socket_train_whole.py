@@ -29,7 +29,7 @@ def init_inventory():
         inventory[i] = 0 
         payed_items[i] = 0
 
-def calculate_reward(previous_state, current_state, target, task):
+def calculate_reward(previous_state, current_state, target, task, playerNum):
     if task == 'navigate': 
         return None 
     norm_penalty = -50
@@ -39,8 +39,8 @@ def calculate_reward(previous_state, current_state, target, task):
         if len(current_state['violations']) != 0:
             print(f'violated norm: {current_state['violations']}')
             return norm_penalty
-        prev_player = previous_state['observation']['players'][0]
-        curr_player = current_state['observation']['players'][0]
+        prev_player = previous_state['observation']['players'][playerNum]
+        curr_player = current_state['observation']['players'][playerNum]
 
         prev_dist = euclidean_distance(prev_player['position'], target_location) 
         curr_dist = euclidean_distance(curr_player['position'], target_location) 
@@ -53,12 +53,12 @@ def calculate_reward(previous_state, current_state, target, task):
                 return 100 
         else:
             # the agent is guaranteed to have a basket by this point
-            basket_contents = current_state['observation']['baskets'][0]['contents'] 
+            basket_contents = current_state['observation']['baskets'][playerNum]['contents'] 
             for i, b in enumerate(basket_contents):
                 basket_contents[i] = b.replace(' ', '_')
             if target in basket_contents:
                 target_id = basket_contents.index(target) 
-                cur_num = current_state['observation']['baskets'][0]['contents_quant'][target_id] 
+                cur_num = current_state['observation']['baskets'][playerNum]['contents_quant'][target_id] 
                 # print(cur_num)
                 if cur_num > inventory[target]:
                     inventory[target] = cur_num
@@ -70,7 +70,7 @@ def calculate_reward(previous_state, current_state, target, task):
         if len(current_state['violations']) != 0:
             print(f'violated norm: {current_state['violations']}')
             return norm_penalty 
-        if len(current_state['observation']['baskets'][0]['purchased_contents']) != 0: 
+        if len(current_state['observation']['baskets'][playerNum]['purchased_contents']) != 0: 
             return 100 # Basket agent check out is guaranteed to be successful
         return 0 # Sparse reward since checkout position is fixed and extremely easy 
 
@@ -85,7 +85,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    planner = HyperPlanner(obj_list)
+    playerNum = input("Please enter player ID: ")
+
+    planner = HyperPlanner(obj_list, playerNum)
     
     # Connect to Supermarket
     HOST = '127.0.0.1'
@@ -99,7 +101,7 @@ if __name__ == "__main__":
         # start = False 
         planner.reset()
 
-        sock_game.send(str.encode("0 RESET"))  # reset the game
+        sock_game.send(str.encode(playerNum + " RESET"))  # reset the game
 
         state = recv_socket_data(sock_game)
         state = json.loads(state)
@@ -119,13 +121,13 @@ if __name__ == "__main__":
             while not done:
                 cnt += 1
                 action_index, finish = agent.choose_action(state)
-                action = "0 " + agent.action_commands[action_index] 
+                action = playerNum + " " + agent.action_commands[action_index] 
                 # print(action)
                 sock_game.send(str.encode(action))  # send action to env 
 
                 next_state = recv_socket_data(sock_game)  # get observation from env
                 next_state = json.loads(next_state) 
-                if action == '0 INTERACT' and current_task.split()[0] == 'get':
+                if action == playerNum + ' INTERACT' and current_task.split()[0] == 'get':
                     sock_game.send(str.encode(action))  # remove dialogue box 
                     next_state = recv_socket_data(sock_game)  # get observation from env
                     next_state = json.loads(next_state) 
@@ -134,18 +136,18 @@ if __name__ == "__main__":
                         next_state = recv_socket_data(sock_game)  # get observation from env
                         next_state = json.loads(next_state) 
 
-                if action == '0 INTERACT' and current_task.split()[0] == 'pay':
+                if action == playerNum + ' INTERACT' and current_task.split()[0] == 'pay':
                     sock_game.send(str.encode(action))
                     next_state = recv_socket_data(sock_game)  # get observation from env
                     next_state = json.loads(next_state) 
-                    sock_game.send(str.encode('0 INTERACT'))  # remove dialogue box 
+                    sock_game.send(str.encode(playerNum + ' INTERACT'))  # remove dialogue box 
                     next_state = recv_socket_data(sock_game)  # get observation from env
                     next_state = json.loads(next_state) 
                 # if next_state['observation']['players'][0]['position'][0] < 0 and abs(next_state['observation']['players'][0]['position'][1] - exit_pos[1]) < 1:
                 #     next_state['gameOver'] = True
 
                 # Define the reward based on the state and next_state
-                reward = calculate_reward(state, next_state, target=current_task.split()[1], task=current_task.split()[0])  # You need to define this function 
+                reward = calculate_reward(state, next_state, target=current_task.split()[1], task=current_task.split()[0], playerNum=playerNum)  # You need to define this function 
                 if reward == 100 or finish:
                     print("Success!") 
                     done = True 

@@ -10,7 +10,7 @@ class GetObjAgent:
     Agent gets certain object from a close location (using basket only).
     '''
     # here are some default parameters, you can use different ones
-    def __init__(self, name, target, alpha=0.5, gamma=0.9, epsilon=0.05, mini_epsilon=0.005, decay=0.9999, granularity=0.15):
+    def __init__(self, name, target, alpha=0.5, gamma=0.9, epsilon=0.05, mini_epsilon=0.005, decay=0.9999, granularity=0.15, playerNum=0):
         self.name = name
         self.action_commands = ['NORTH', 'SOUTH', 'EAST', 'WEST', 'INTERACT']
         self.action_space = 5
@@ -23,11 +23,13 @@ class GetObjAgent:
         self.qtable = pd.DataFrame(columns=[i for i in range(self.action_space)])  # generate the initial table 
         self.norm_table = pd.DataFrame(columns=[i for i in range(self.action_space)])
         self.granularity = granularity
+        self.playerNum = playerNum
+
     
     def trans(self, state, granularity=0.5):
         # You should design a function to transform the huge state into a learnable state for the agent
         #It should be simple but also contains enough information for the agent to learn
-        player_info = state['observation']['players'][0]
+        player_info = state['observation']['players'][self.playerNum]
         position = player_info['position'].copy()
         position[0] = int((1 + position[0]) / granularity)
         position[1] = int((1 + position[1]) / granularity)

@@ -15,19 +15,19 @@ class HyperPlanner:
     Planner for selecting agents for different goals.
     '''
     # here are some default parameters, you can use different ones
-    def __init__(self, obj_list): 
+    def __init__(self, obj_list, playerNum): 
 
         skill_set = [
             'navigate ' + item for item in obj_list
         ] 
 
-        self.agents = [PlanningAgent(item, item.split()[1]) for item in skill_set if item.split()[0] == 'navigate'] 
+        self.agents = [PlanningAgent(item, item.split()[1], self.playerNum) for item in skill_set if item.split()[0] == 'navigate'] 
 
         skill_set.extend(['get ' + item for item in obj_list])
-        self.agents.extend([GetObjAgent(item, item.split()[1]) for item in skill_set if item.split()[0] == 'get']) 
+        self.agents.extend([GetObjAgent(item, item.split()[1], self.playerNum) for item in skill_set if item.split()[0] == 'get']) 
 
         skill_set.extend(['pay checkout'])
-        self.agents.append(CheckoutAgent('pay checkout', 'checkout'))
+        self.agents.append(CheckoutAgent('pay checkout', 'checkout', self.playerNum))
 
         for a in self.agents:
             a.load_qtables()
@@ -35,6 +35,7 @@ class HyperPlanner:
         self.current_goal_id = 0
         self.plan = None 
         self.use_cart = False 
+        self.playerNum = playerNum
 
     def reset(self):
         self.current_goal_id = 0
@@ -42,7 +43,7 @@ class HyperPlanner:
         self.use_cart = False
 
     def parse_shopping_list(self, state):
-        player_info = state['observation']['players'][0] 
+        player_info = state['observation']['players'][self.playerNum] 
         shopping_list = player_info['shopping_list'] 
 
         self.use_cart = np.sum(player_info['list_quant']) > 6

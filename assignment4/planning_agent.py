@@ -11,12 +11,13 @@ class PlanningAgent:
     '''
     Path planning agent for fast navigation
     '''
-    def __init__(self, name, target):
+    def __init__(self, name, target, playerNum):
         self.name = name 
         self.target = target
         self.action_directions = [[0, -1], [0, 1], [1, 0], [-1, 0]] 
         self.action_commands = ['NORTH', 'SOUTH', 'EAST', 'WEST']
         self.map = None
+        self.playerNum = playerNum
     
     def build_map(self, granularity=0.2):
         self.map = np.zeros((int(max_x/granularity), int(max_y/granularity)))
@@ -71,7 +72,7 @@ class PlanningAgent:
         self.build_map()
 
     def choose_action(self, state):
-        player_info = state['observation']['players'][0]
+        player_info = state['observation']['players'][self.playerNum]
         position = player_info['position'] 
 
         cur_position = [int(position[0] / 0.2), int(position[1] / 0.2)] 
