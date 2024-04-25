@@ -39,8 +39,8 @@ def calculate_reward(previous_state, current_state, target, task, playerNum):
         if len(current_state['violations']) != 0:
             print(f'violated norm: {current_state['violations']}')
             return norm_penalty
-        prev_player = previous_state['observation']['players'][playerNum]
-        curr_player = current_state['observation']['players'][playerNum]
+        prev_player = previous_state['observation']['players'][int(playerNum)]
+        curr_player = current_state['observation']['players'][int(playerNum)]
 
         prev_dist = euclidean_distance(prev_player['position'], target_location) 
         curr_dist = euclidean_distance(curr_player['position'], target_location) 
@@ -53,12 +53,12 @@ def calculate_reward(previous_state, current_state, target, task, playerNum):
                 return 100 
         else:
             # the agent is guaranteed to have a basket by this point
-            basket_contents = current_state['observation']['baskets'][playerNum]['contents'] 
+            basket_contents = current_state['observation']['baskets'][int(playerNum)]['contents'] 
             for i, b in enumerate(basket_contents):
                 basket_contents[i] = b.replace(' ', '_')
             if target in basket_contents:
                 target_id = basket_contents.index(target) 
-                cur_num = current_state['observation']['baskets'][playerNum]['contents_quant'][target_id] 
+                cur_num = current_state['observation']['baskets'][int(playerNum)]['contents_quant'][target_id] 
                 # print(cur_num)
                 if cur_num > inventory[target]:
                     inventory[target] = cur_num
@@ -86,6 +86,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     playerNum = input("Please enter player ID: ")
+    # playerNum = int(playerNum)
 
     planner = HyperPlanner(obj_list, playerNum)
     

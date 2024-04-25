@@ -15,11 +15,12 @@ class HyperPlanner:
     Planner for selecting agents for different goals.
     '''
     # here are some default parameters, you can use different ones
-    def __init__(self, obj_list, playerNum): 
+    def __init__(self, obj_list, playerNum: str='0'): 
 
         skill_set = [
             'navigate ' + item for item in obj_list
         ] 
+        self.playerNum = int(playerNum)
 
         self.agents = [PlanningAgent(item, item.split()[1], self.playerNum) for item in skill_set if item.split()[0] == 'navigate'] 
 
@@ -35,7 +36,7 @@ class HyperPlanner:
         self.current_goal_id = 0
         self.plan = None 
         self.use_cart = False 
-        self.playerNum = playerNum
+        # self.playerNum = playerNum
 
     def reset(self):
         self.current_goal_id = 0
